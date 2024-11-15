@@ -16,7 +16,7 @@ func main() {
 }
 
 func runGame() error {
-	g, err := game.NewGame()
+	g, err := game.NewGame(0)
 	if err != nil {
 		return errors.New("failed to create game: " + err.Error())
 	}
@@ -35,5 +35,14 @@ func runGame() error {
 	if err := g.AddPlayer(p2); err != nil {
 		return errors.New("failed to add player 2 to game: " + err.Error())
 	}
+
+	if err := g.Start(); err != nil {
+		return errors.New("failed to start game: " + err.Error())
+	}
+
+	g.PrintWeights()
+	p1.PrintCards()
+	p2.PrintCards()
+
 	return nil
 }
