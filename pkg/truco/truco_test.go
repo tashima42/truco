@@ -1,4 +1,4 @@
-package game
+package truco
 
 import "testing"
 

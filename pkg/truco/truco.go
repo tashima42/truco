@@ -1,4 +1,4 @@
-package game
+package truco
 
 import (
 	"errors"
@@ -24,12 +24,14 @@ type Game struct {
 	players       []*Player
 	maxPlayers    int
 	cardPointer   int
+	round         int
 }
 
 type Player struct {
-	id    string
-	name  string
-	cards []Card
+	id     string
+	name   string
+	cards  []Card
+	points int
 }
 
 func NewGame(seed1, seed2 uint64) (*Game, error) {
@@ -45,6 +47,7 @@ func NewGame(seed1, seed2 uint64) (*Game, error) {
 		deckWeights:   DefaultDeckWeights(),
 		cardPointer:   0,
 		currentPlayer: nil,
+		round:         0,
 	}
 	return &game, nil
 }
@@ -60,7 +63,7 @@ func NewPlayer(name string) (*Player, error) {
 	if err != nil {
 		return nil, err
 	}
-	player := Player{id: id, name: name}
+	player := Player{id: id, name: name, points: 0, cards: make([]Card, 3)}
 	return &player, nil
 }
 
@@ -103,6 +106,7 @@ func (g *Game) Start() error {
 	g.currentPlayer = g.players[0]
 	g.setManilha()
 	g.drawCards()
+	g.round += 1
 
 	return nil
 }
@@ -113,21 +117,22 @@ func (g *Game) setManilha() {
 
 	cardID := string(g.manilha[1])
 
-	spades := Card("A" + cardID)
-	hearts := Card("B" + cardID)
-	diamonds := Card("C" + cardID)
-	clubs := Card("D" + cardID)
+	spades := Card(Spades + cardID)
+	hearts := Card(Hearts + cardID)
+	diamonds := Card(Diamonds + cardID)
+	clubs := Card(Clubs + cardID)
 
-	g.deckWeights[spades] += 13
-	g.deckWeights[hearts] += 12
-	g.deckWeights[diamonds] += 11
+	// add weight to the cards based on their suit
 	g.deckWeights[clubs] += 10
+	g.deckWeights[diamonds] += 11
+	g.deckWeights[hearts] += 12
+	g.deckWeights[spades] += 13
 }
 
 func (g *Game) drawCards() {
 	for _, player := range g.players {
 		for i := 0; i < 3; i++ {
-			player.cards = append(player.cards, g.deck[g.cardPointer])
+			player.cards[i] = g.deck[g.cardPointer]
 			g.cardPointer += 1
 		}
 	}

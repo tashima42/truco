@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/tashima42/truco/pkg/game"
+	"github.com/tashima42/truco/pkg/truco"
 )
 
 func main() {
@@ -16,15 +16,15 @@ func main() {
 }
 
 func runGame() error {
-	g, err := game.NewGame(123, 456)
+	g, err := truco.NewGame(123, 456)
 	if err != nil {
 		return errors.New("failed to create game: " + err.Error())
 	}
-	p1, err := game.NewPlayer("player 1")
+	p1, err := truco.NewPlayer("player 1")
 	if err != nil {
 		return errors.New("failed to create player: " + err.Error())
 	}
-	p2, err := game.NewPlayer("player 2")
+	p2, err := truco.NewPlayer("player 2")
 	if err != nil {
 		return errors.New("failed to create player: " + err.Error())
 	}
