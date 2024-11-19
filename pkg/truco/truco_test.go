@@ -95,11 +95,10 @@ func TestRemovePlayer(t *testing.T) {
 }
 
 func TestSetManilha(t *testing.T) {
-	g, err := defaultGame()
+	g, err := defaultGame(true)
 	if err != nil {
 		t.Error("failed to create game: " + err.Error())
 	}
-	g.Seed(123, 456)
 
 	if err := g.Start(); err != nil {
 		t.Error("failed to start game: " + err.Error())
@@ -110,7 +109,7 @@ func TestSetManilha(t *testing.T) {
 	}
 
 	if g.manilha != string(ThreeHearts) {
-		t.Error("seed isn't working properly, expected manilha to be jack hearts, instead got: " + g.manilha)
+		t.Error("seed isn't working properly, expected manilha to be B3, instead got: " + g.manilha)
 	}
 
 	// A2 A4 A7 CB
@@ -129,39 +128,95 @@ func TestSetManilha(t *testing.T) {
 }
 
 func TestDrawCards(t *testing.T) {
-	g, err := defaultGame()
+	g, err := defaultGame(true)
 	if err != nil {
 		t.Error("failed to create game: " + err.Error())
 	}
-	g.Seed(123, 456)
-	g.Start()
+	if err := g.Start(); err != nil {
+		t.Error("failed to start game: " + err.Error())
+	}
 	if g.cardPointer != 7 {
-		t.Errorf("card pointer is at wrong location, expected 6, instead got: %d", g.cardPointer)
+		t.Errorf("card pointer is at wrong location, expected 7, instead got: %d", g.cardPointer)
 	}
 
 	p1 := g.players[0]
 	p2 := g.players[1]
 	if p1.cards[0] != QueenSpades {
-		t.Error("wrong card for player, expected queen spades, instead got: " + p1.cards[0])
+		t.Error("wrong card for player, expected AC, instead got: " + p1.cards[0])
 	}
 	if p1.cards[1] != QueenHearts {
-		t.Error("wrong card for player, expected queen hearts, instead got: " + p1.cards[1])
+		t.Error("wrong card for player, expected BC, instead got: " + p1.cards[1])
 	}
 	if p1.cards[2] != ThreeDiamonds {
-		t.Error("wrong card for player, expected three diamonds, instead got: " + p1.cards[2])
+		t.Error("wrong card for player, expected C3, instead got: " + p1.cards[2])
 	}
 	if p2.cards[0] != SevenClubs {
-		t.Error("wrong card for player, expected seven clubs, instead got: " + p2.cards[0])
+		t.Error("wrong card for player, expected D7, instead got: " + p2.cards[0])
 	}
 	if p2.cards[1] != AceSpades {
-		t.Error("wrong card for player, expected ace spades, instead got: " + p2.cards[1])
+		t.Error("wrong card for player, expected A1, instead got: " + p2.cards[1])
 	}
 	if p2.cards[2] != ThreeClubs {
-		t.Error("wrong card for player, expected three clubs, instead got: " + p2.cards[2])
+		t.Error("wrong card for player, expected D3, instead got: " + p2.cards[2])
 	}
 }
 
-func defaultGame() (*Game, error) {
+func TestHasCard(t *testing.T) {
+	p1, err := NewPlayer("player 1")
+	if err != nil {
+		t.Error("failed to create player 1")
+	}
+	p1.cards = []Card{QueenSpades, QueenHearts, ThreeDiamonds}
+
+	if !p1.hasCard(QueenSpades) {
+		t.Error("player 1 should have queen spades")
+	}
+	if p1.hasCard(AceClubs) {
+		t.Error("player 1 should not have ace clubs")
+	}
+}
+
+func TestPlay(t *testing.T) {
+	g, err := defaultGame(true)
+	if err != nil {
+		t.Error("failed to create game: " + err.Error())
+	}
+	if err := g.Start(); err != nil {
+		t.Error("failed to start game: " + err.Error())
+	}
+	p1 := g.players[0]
+	if err := g.Play(p1, QueenSpades); err != nil {
+		t.Error("failed to play card: " + err.Error())
+	}
+	if err := g.Play(p1, QueenSpades); err != nil {
+		if err != ErrNotPlayerTurn {
+			t.Error("error should have been not player turn, instead got: " + err.Error())
+		}
+	}
+}
+
+func TestPlayCard(t *testing.T) {
+	g, err := defaultGame(true)
+	if err != nil {
+		t.Error("failed to create game: " + err.Error())
+	}
+	if err := g.Start(); err != nil {
+		t.Error("failed to start game: " + err.Error())
+	}
+	p1 := g.players[0]
+	g.playCard(p1, ThreeDiamonds)
+	if len(p1.cards) != 2 {
+		t.Error("player 1 should have 2 cards")
+	}
+	if len(g.pile) != 1 {
+		t.Error("pile should have 1 card")
+	}
+	if g.pile[0][0] != ThreeDiamonds {
+		t.Error("wrong card in pile")
+	}
+}
+
+func defaultGame(seed bool) (*Game, error) {
 	g, err := NewGame()
 	if err != nil {
 		return nil, err
@@ -181,6 +236,9 @@ func defaultGame() (*Game, error) {
 
 	if err := g.AddPlayer(p2); err != nil {
 		return nil, err
+	}
+	if seed {
+		g.Seed(123, 456)
 	}
 	return g, nil
 }

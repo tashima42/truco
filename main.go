@@ -40,5 +40,9 @@ func runGame() error {
 		return errors.New("failed to start game: " + err.Error())
 	}
 
+	if err := g.Play(p1, p1.Cards()[0]); err != nil {
+		return err
+	}
+
 	return nil
 }
