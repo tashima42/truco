@@ -3,7 +3,7 @@ package game
 import "testing"
 
 func TestNewGame(t *testing.T) {
-	g, err := NewGame(0)
+	g, err := NewGame(0, 0)
 	if err != nil {
 		t.Error(err)
 	}
@@ -34,7 +34,7 @@ func TestNewPlayer(t *testing.T) {
 }
 
 func TestAddPlayer(t *testing.T) {
-	g, err := NewGame(0)
+	g, err := NewGame(0, 0)
 	if err != nil {
 		t.Error("failed to create game: " + err.Error())
 	}
@@ -69,7 +69,7 @@ func TestAddPlayer(t *testing.T) {
 }
 
 func TestRemovePlayer(t *testing.T) {
-	g, err := NewGame(0)
+	g, err := NewGame(0, 0)
 	if err != nil {
 		t.Error("failed to create game: " + err.Error())
 	}
@@ -95,7 +95,7 @@ func TestRemovePlayer(t *testing.T) {
 }
 
 func TestSetManilha(t *testing.T) {
-	g, err := NewGame(1352522007503861735)
+	g, err := NewGame(123, 456)
 	if err != nil {
 		t.Error("failed to create game: " + err.Error())
 	}
@@ -105,20 +105,64 @@ func TestSetManilha(t *testing.T) {
 		t.Error("manilha should be the same as the first card of the deck")
 	}
 
-	if g.manilha != string(JackHearts) {
+	if g.manilha != string(ThreeHearts) {
 		t.Error("seed isn't working properly, expected manilha to be jack hearts, instead got: " + g.manilha)
 	}
 
-	if g.deckWeights[JackClubs] != 16 {
-		t.Errorf("expected jack clubs weight to be 16, instead got: %d", g.deckWeights[JackClubs])
+	// A2 A4 A7 CB
+	if g.deckWeights[ThreeClubs] != 20 {
+		t.Errorf("expected three clubs weight to be 20, instead got: %d", g.deckWeights[ThreeClubs])
 	}
-	if g.deckWeights[JackDiamonds] != 17 {
-		t.Errorf("expected jack diamonds weight to be 16, instead got: %d", g.deckWeights[JackDiamonds])
+	if g.deckWeights[ThreeDiamonds] != 21 {
+		t.Errorf("expected three diamonds weight to be 21, instead got: %d", g.deckWeights[ThreeDiamonds])
 	}
-	if g.deckWeights[JackHearts] != 18 {
-		t.Errorf("expected jack hearts weight to be 16, instead got: %d", g.deckWeights[JackHearts])
+	if g.deckWeights[ThreeHearts] != 22 {
+		t.Errorf("expected three hearts weight to be 22, instead got: %d", g.deckWeights[ThreeHearts])
 	}
-	if g.deckWeights[JackSpades] != 19 {
-		t.Errorf("expected jack spades weight to be 16, instead got: %d", g.deckWeights[JackSpades])
+	if g.deckWeights[ThreeSpades] != 23 {
+		t.Errorf("expected three spades weight to be 23, instead got: %d", g.deckWeights[ThreeSpades])
+	}
+}
+
+func TestDrawCards(t *testing.T) {
+	g, err := NewGame(123, 456)
+	if err != nil {
+		t.Error("failed to create game: " + err.Error())
+	}
+	p1, err := NewPlayer("player 1")
+	if err != nil {
+		t.Error("failed to create player: " + err.Error())
+	}
+	if err := g.AddPlayer(p1); err != nil {
+		t.Error("failed to add player 1 to game: " + err.Error())
+	}
+	p2, err := NewPlayer("player 2")
+	if err := g.AddPlayer(p2); err != nil {
+		t.Error("failed to add player 2 to game: " + err.Error())
+	}
+	if err != nil {
+		t.Error("failed to create player: " + err.Error())
+	}
+	g.drawCards()
+	if g.cardPointer != 6 {
+		t.Errorf("card pointer is at wrong location, expected 6, instead got: %d", g.cardPointer)
+	}
+	if p1.cards[0] != ThreeHearts {
+		t.Error("wrong card for player, expected jack clubs, instead got: " + p1.cards[0])
+	}
+	if p1.cards[1] != QueenSpades {
+		t.Error("wrong card for player, expected jack clubs, instead got: " + p1.cards[1])
+	}
+	if p1.cards[2] != QueenHearts {
+		t.Error("wrong card for player, expected jack clubs, instead got: " + p1.cards[2])
+	}
+	if p2.cards[0] != ThreeDiamonds {
+		t.Error("wrong card for player, expected jack clubs, instead got: " + p2.cards[0])
+	}
+	if p2.cards[1] != SevenClubs {
+		t.Error("wrong card for player, expected jack clubs, instead got: " + p2.cards[1])
+	}
+	if p2.cards[2] != AceSpades {
+		t.Error("wrong card for player, expected jack clubs, instead got: " + p2.cards[2])
 	}
 }

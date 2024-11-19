@@ -1,6 +1,6 @@
 package game
 
-import "math/rand"
+import "math/rand/v2"
 
 type (
 	Card        string
@@ -50,47 +50,49 @@ var (
 	KingClubs     Card = "DE"
 )
 
-var DefaultDeck = []Card{
-	AceSpades,
-	AceHearts,
-	AceDiamonds,
-	AceClubs,
-	TwoSpades,
-	TwoHearts,
-	TwoDiamonds,
-	TwoClubs,
-	ThreeSpades,
-	ThreeHearts,
-	ThreeDiamonds,
-	ThreeClubs,
-	FourSpades,
-	FourHearts,
-	FourDiamonds,
-	FourClubs,
-	FiveSpades,
-	FiveHearts,
-	FiveDiamonds,
-	FiveClubs,
-	SixSpades,
-	SixHearts,
-	SixDiamonds,
-	SixClubs,
-	SevenSpades,
-	SevenHearts,
-	SevenDiamonds,
-	SevenClubs,
-	JackSpades,
-	JackHearts,
-	JackDiamonds,
-	JackClubs,
-	QueenSpades,
-	QueenHearts,
-	QueenDiamonds,
-	QueenClubs,
-	KingSpades,
-	KingHearts,
-	KingDiamonds,
-	KingClubs,
+func DefaultDeck() []Card {
+	return []Card{
+		AceSpades,
+		AceHearts,
+		AceDiamonds,
+		AceClubs,
+		TwoSpades,
+		TwoHearts,
+		TwoDiamonds,
+		TwoClubs,
+		ThreeSpades,
+		ThreeHearts,
+		ThreeDiamonds,
+		ThreeClubs,
+		FourSpades,
+		FourHearts,
+		FourDiamonds,
+		FourClubs,
+		FiveSpades,
+		FiveHearts,
+		FiveDiamonds,
+		FiveClubs,
+		SixSpades,
+		SixHearts,
+		SixDiamonds,
+		SixClubs,
+		SevenSpades,
+		SevenHearts,
+		SevenDiamonds,
+		SevenClubs,
+		JackSpades,
+		JackHearts,
+		JackDiamonds,
+		JackClubs,
+		QueenSpades,
+		QueenHearts,
+		QueenDiamonds,
+		QueenClubs,
+		KingSpades,
+		KingHearts,
+		KingDiamonds,
+		KingClubs,
+	}
 }
 
 func DefaultDeckWeights() map[Card]int {
@@ -138,13 +140,15 @@ func DefaultDeckWeights() map[Card]int {
 	}
 }
 
-func ShuffledDeck(seed int64) []Card {
-	if seed == 0 {
-		seed = rand.Int63()
+func ShuffledDeck(seed1, seed2 uint64) []Card {
+	if seed1 == 0 || seed2 == 0 {
+		seed1 = rand.Uint64()
+		seed2 = rand.Uint64()
 	}
-	rand.New(rand.NewSource(seed))
-	deck := DefaultDeck
-	rand.Shuffle(len(deck), func(i, j int) {
+	r := rand.New(rand.NewPCG(seed1, seed2))
+
+	deck := DefaultDeck()
+	r.Shuffle(len(deck), func(i, j int) {
 		deck[i], deck[j] = deck[j], deck[i]
 	})
 	return deck

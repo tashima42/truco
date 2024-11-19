@@ -2,7 +2,6 @@ package game
 
 import (
 	"errors"
-	"fmt"
 
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
@@ -33,7 +32,7 @@ type Player struct {
 	cards []Card
 }
 
-func NewGame(seed int64) (*Game, error) {
+func NewGame(seed1, seed2 uint64) (*Game, error) {
 	id, err := gonanoid.New()
 	if err != nil {
 		return nil, err
@@ -42,7 +41,7 @@ func NewGame(seed int64) (*Game, error) {
 		id:            id,
 		maxPlayers:    2,
 		players:       make([]*Player, 0),
-		deck:          ShuffledDeck(seed),
+		deck:          ShuffledDeck(seed1, seed2),
 		deckWeights:   DefaultDeckWeights(),
 		cardPointer:   0,
 		currentPlayer: nil,
@@ -127,17 +126,9 @@ func (g *Game) setManilha() {
 
 func (g *Game) drawCards() {
 	for _, player := range g.players {
-		for range 3 {
+		for i := 0; i < 3; i++ {
 			player.cards = append(player.cards, g.deck[g.cardPointer])
 			g.cardPointer += 1
 		}
 	}
-}
-
-func (g *Game) PrintWeights() {
-	fmt.Printf("%+v", g.deckWeights)
-}
-
-func (p *Player) PrintCards() {
-	fmt.Printf("%+v", p.cards)
 }
