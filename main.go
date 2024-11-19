@@ -16,7 +16,7 @@ func main() {
 }
 
 func runGame() error {
-	g, err := truco.NewGame(123, 456)
+	g, err := truco.NewGame()
 	if err != nil {
 		return errors.New("failed to create game: " + err.Error())
 	}

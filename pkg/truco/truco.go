@@ -25,6 +25,8 @@ type Game struct {
 	maxPlayers    int
 	cardPointer   int
 	round         int
+	seed1         uint64
+	seed2         uint64
 }
 
 type Player struct {
@@ -34,7 +36,7 @@ type Player struct {
 	points int
 }
 
-func NewGame(seed1, seed2 uint64) (*Game, error) {
+func NewGame() (*Game, error) {
 	id, err := gonanoid.New()
 	if err != nil {
 		return nil, err
@@ -43,11 +45,13 @@ func NewGame(seed1, seed2 uint64) (*Game, error) {
 		id:            id,
 		maxPlayers:    2,
 		players:       make([]*Player, 0),
-		deck:          ShuffledDeck(seed1, seed2),
+		deck:          nil,
 		deckWeights:   DefaultDeckWeights(),
 		cardPointer:   0,
 		currentPlayer: nil,
 		round:         0,
+		seed1:         0,
+		seed2:         0,
 	}
 	return &game, nil
 }
@@ -65,6 +69,11 @@ func NewPlayer(name string) (*Player, error) {
 	}
 	player := Player{id: id, name: name, points: 0, cards: make([]Card, 3)}
 	return &player, nil
+}
+
+func (g *Game) Seed(seed1, seed2 uint64) {
+	g.seed1 = seed1
+	g.seed2 = seed2
 }
 
 func (g *Game) AddPlayer(player *Player) error {
@@ -103,10 +112,10 @@ func (g *Game) Start() error {
 		return ErrNotEnoughPlayers
 	}
 
+	g.deck = ShuffledDeck(g.seed1, g.seed2)
 	g.currentPlayer = g.players[0]
 	g.setManilha()
 	g.drawCards()
-	g.round += 1
 
 	return nil
 }
