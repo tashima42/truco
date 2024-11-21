@@ -25,6 +25,8 @@ const (
 	PlayerOnePoint Action = iota
 	PlayerTwoPoint
 	Draw
+	PlayerOneWin
+	PlayerTwoWin
 )
 
 type Game struct {
@@ -203,6 +205,17 @@ func (g *Game) Play(player *Player, card Card) error {
 			g.lastAction = Draw
 		}
 	}
+
+	// if any of the players reached 12 points or more, declare him as the winner
+	if g.players[0].points >= 12 {
+		g.running = false
+		g.lastAction = PlayerOneWin
+	}
+	if g.players[1].points >= 12 {
+		g.running = false
+		g.lastAction = PlayerTwoWin
+	}
+
 	// next player
 	g.nextPlayer += 1
 	if g.nextPlayer == len(g.players) {
@@ -234,6 +247,10 @@ func (g *Game) playCard(player *Player, card Card) {
 	}
 	// add card to pile
 	g.pile[g.round] = append(g.pile[g.round], card)
+}
+
+func (g *Game) CurrentPlayer() *Player {
+	return g.currentPlayer
 }
 
 func (p *Player) Cards() []Card {
