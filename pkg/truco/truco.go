@@ -14,7 +14,7 @@ var (
 	ErrPlayerNotFound        = errors.New("player id not found")
 	ErrNotEnoughPlayers      = errors.New("not enough players to start the game")
 	ErrGameNotRunning        = errors.New("game is not running")
-	ErrNotPlayerTurn         = errors.New("it's not the player's turn")
+	ErrNotPlayerTurn         = errors.New("not the player's turn")
 	ErrPlayerDoesNotHaveCard = errors.New("player does not have the card")
 )
 
@@ -33,7 +33,6 @@ type Game struct {
 	id            string
 	manilha       string
 	deckWeights   map[Card]int
-	currentPlayer *Player
 	deck          []Card
 	pile          [][]Card
 	players       []*Player
@@ -42,7 +41,7 @@ type Game struct {
 	round         int
 	seed1         uint64
 	seed2         uint64
-	nextPlayer    int
+	currentPlayer int
 	running       bool
 	lastAction    Action
 }
@@ -66,11 +65,10 @@ func NewGame() (*Game, error) {
 		deck:          nil,
 		deckWeights:   DefaultDeckWeights(),
 		cardPointer:   0,
-		currentPlayer: nil,
 		round:         0,
 		seed1:         0,
 		seed2:         0,
-		nextPlayer:    0,
+		currentPlayer: 0,
 		pile:          make([][]Card, 1),
 	}
 	return &game, nil
@@ -132,13 +130,22 @@ func (g *Game) Start() error {
 		return ErrNotEnoughPlayers
 	}
 
-	g.deck = ShuffledDeck(g.seed1, g.seed2)
-	g.currentPlayer = g.players[0]
-	g.setManilha()
-	g.drawCards()
+	g.startRound()
 	g.running = true
 
 	return nil
+}
+
+func (g *Game) startRound() {
+	g.cardPointer = 0
+	g.players[0].cards = make([]Card, 0)
+	g.players[1].cards = make([]Card, 0)
+	if g.seed2 != 0 {
+		g.seed2 += uint64(g.round)
+	}
+	g.deck = ShuffledDeck(g.seed1, g.seed2)
+	g.setManilha()
+	g.drawCards()
 }
 
 func (g *Game) setManilha() {
@@ -162,7 +169,7 @@ func (g *Game) setManilha() {
 func (g *Game) drawCards() {
 	for _, player := range g.players {
 		for i := 0; i < 3; i++ {
-			player.cards[i] = g.deck[g.cardPointer]
+			player.cards = append(player.cards, g.deck[g.cardPointer])
 			g.cardPointer += 1
 		}
 	}
@@ -181,7 +188,7 @@ func (g *Game) Play(player *Player, card Card) error {
 	if !g.running {
 		return ErrGameNotRunning
 	}
-	if player.id != g.currentPlayer.id {
+	if player.id != g.CurrentPlayer().id {
 		return ErrNotPlayerTurn
 	}
 	if !player.hasCard(card) {
@@ -191,19 +198,33 @@ func (g *Game) Play(player *Player, card Card) error {
 	g.playCard(player, card)
 
 	// only run the win check if it is the last turn
-	if len(g.pile[g.round]) == 2 {
+	if len(g.pile[g.round])%2 == 0 {
 		// if the player wins the round, they start the next round
 		// compare the current card with the previous played card
-		switch g.compareCards(card, g.pile[g.round][0]) {
+		compare := g.compareCards(card, g.pile[g.round][len(g.pile)-1])
+		switch compare {
 		case 1:
-			g.players[g.nextPlayer].points += 1
-			g.lastAction = Action(g.nextPlayer)
+			g.players[g.currentPlayer].points += 1
+			g.lastAction = Action(g.currentPlayer)
 		case -1:
-			g.players[g.nextPlayer].points += 1
-			g.lastAction = Action(g.nextPlayer)
+			g.players[g.currentPlayer].points += 1
+			g.lastAction = Action(g.currentPlayer)
 		case 0:
 			g.lastAction = Draw
 		}
+		if g.lastAction == PlayerOnePoint {
+			g.currentPlayer = 0
+		} else {
+			g.currentPlayer = 1
+		}
+
+		if len(g.pile[g.round]) == 6 {
+			g.round += 1
+			g.startRound()
+		}
+	} else {
+		// toggle player between zero and one
+		g.currentPlayer = g.currentPlayer ^ 1
 	}
 
 	// if any of the players reached 12 points or more, declare him as the winner
@@ -215,23 +236,16 @@ func (g *Game) Play(player *Player, card Card) error {
 		g.running = false
 		g.lastAction = PlayerTwoWin
 	}
-
-	// next player
-	g.nextPlayer += 1
-	if g.nextPlayer == len(g.players) {
-		g.nextPlayer = 0
-	}
-	g.currentPlayer = g.players[g.nextPlayer]
-
-	g.round += 1
 	return nil
 }
 
 func (g *Game) compareCards(card1, card2 Card) int {
-	if g.deckWeights[card1] > g.deckWeights[card2] {
+	deckWeightOne := g.deckWeights[card1]
+	deckWeightTwo := g.deckWeights[card2]
+	if deckWeightOne > deckWeightTwo {
 		return 1
 	}
-	if g.deckWeights[card1] < g.deckWeights[card2] {
+	if deckWeightOne < deckWeightTwo {
 		return -1
 	}
 	return 0
@@ -246,13 +260,56 @@ func (g *Game) playCard(player *Player, card Card) {
 		}
 	}
 	// add card to pile
+	if len(g.pile) == g.round {
+		g.pile = append(g.pile, []Card{})
+	}
 	g.pile[g.round] = append(g.pile[g.round], card)
 }
 
 func (g *Game) CurrentPlayer() *Player {
-	return g.currentPlayer
+	return g.players[g.currentPlayer]
+}
+
+func (g *Game) GameAction() Action {
+	return g.lastAction
+}
+
+func (g *Game) Finished() bool {
+	return !g.running
+}
+
+func (g *Game) LastPoint() *Player {
+	switch g.lastAction {
+	case PlayerOnePoint:
+		return g.players[0]
+	case PlayerTwoPoint:
+		return g.players[1]
+	}
+	return nil
+}
+
+func (g *Game) Winner() *Player {
+	switch g.lastAction {
+	case PlayerOneWin:
+		return g.players[0]
+	case PlayerTwoWin:
+		return g.players[1]
+	}
+	return nil
 }
 
 func (p *Player) Cards() []Card {
 	return p.cards
+}
+
+func (p *Player) Name() string {
+	return p.name
+}
+
+func (p *Player) ID() string {
+	return p.id
+}
+
+func (g *Game) Manilha() Card {
+	return Card(g.manilha)
 }

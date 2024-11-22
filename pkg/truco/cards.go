@@ -1,6 +1,9 @@
 package truco
 
-import "math/rand/v2"
+import (
+	"math/rand/v2"
+	"strconv"
+)
 
 type (
 	// Card values are based on unicode playing cards U+1F0<card-value>
@@ -18,7 +21,7 @@ const (
 	Six   = "6"
 	Seven = "7"
 	Jack  = "B"
-	Queen = "C"
+	Queen = "D"
 	King  = "E"
 )
 
@@ -63,10 +66,10 @@ const (
 	JackHearts    Card = Hearts + Jack    // "BB"
 	JackDiamonds  Card = Diamonds + Jack  // "CB"
 	JackClubs     Card = Clubs + Jack     // "DB"
-	QueenSpades   Card = Spades + Queen   // "AC"
-	QueenHearts   Card = Hearts + Queen   // "BC"
-	QueenDiamonds Card = Diamonds + Queen // "CC"
-	QueenClubs    Card = Clubs + Queen    // "DC"
+	QueenSpades   Card = Spades + Queen   // "AD"
+	QueenHearts   Card = Hearts + Queen   // "BD"
+	QueenDiamonds Card = Diamonds + Queen // "CD"
+	QueenClubs    Card = Clubs + Queen    // "DD"
 	KingSpades    Card = Spades + King    // "AE"
 	KingHearts    Card = Hearts + King    // "BE"
 	KingDiamonds  Card = Diamonds + King  // "CE"
@@ -135,11 +138,11 @@ func DefaultDeckWeights() map[Card]int {
 		SevenSpades:   4,
 		SevenHearts:   4,
 		SevenDiamonds: 4,
-		SevenClubs:    5,
+		SevenClubs:    4,
 		QueenSpades:   5,
 		QueenHearts:   5,
 		QueenDiamonds: 5,
-		QueenClubs:    6,
+		QueenClubs:    5,
 		JackSpades:    6,
 		JackHearts:    6,
 		JackDiamonds:  6,
@@ -175,4 +178,12 @@ func ShuffledDeck(seed1, seed2 uint64) []Card {
 		deck[i], deck[j] = deck[j], deck[i]
 	})
 	return deck
+}
+
+func (c Card) Unicode() string {
+	num, err := strconv.ParseInt("1F0"+string(c), 16, 32)
+	if err != nil {
+		panic(err)
+	}
+	return string(rune(num))
 }
