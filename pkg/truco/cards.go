@@ -1,6 +1,7 @@
 package truco
 
 import (
+	"fmt"
 	"math/rand/v2"
 	"strconv"
 )
@@ -164,6 +165,27 @@ func DefaultDeckWeights() map[Card]int {
 		ThreeDiamonds: 10,
 		ThreeClubs:    10,
 	}
+}
+
+func nextCardID(id string) (string, error) {
+	nextIDs := map[string]string{
+		"1": "2",
+		"2": "3",
+		"3": "4",
+		"4": "5",
+		"5": "6",
+		"6": "7",
+		"7": "B",
+		"B": "D",
+		"D": "E",
+		"E": "1",
+	}
+	next, ok := nextIDs[id]
+	if !ok {
+		return "", fmt.Errorf("invalid card id: %s", id)
+	}
+
+	return next, nil
 }
 
 func ShuffledDeck(seed1, seed2 uint64) []Card {

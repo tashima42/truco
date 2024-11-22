@@ -45,46 +45,29 @@ func runGame() error {
 		return errors.New("failed to start game: " + err.Error())
 	}
 
-	fmt.Printf("manilha: %s\n", g.Manilha().Unicode())
-	printCards(p1)
-	printCards(p2)
-	fmt.Printf("%s: playing card ( %s )\n", p1.Name(), p1.Cards()[0].Unicode())
-	if err := g.Play(p1, p1.Cards()[0]); err != nil {
-		return err
+	for i := -0; i < 2; i++ {
+		fmt.Printf("manilha: %s\n", g.Manilha().Unicode())
+		for j := 0; j < 3; j++ {
+			cp := g.CurrentPlayer()
+			printCards(cp)
+			fmt.Printf("%s: playing card ( %s )\n", cp.Name(), cp.Cards()[0].Unicode())
+			if err := g.Play(cp, cp.Cards()[0]); err != nil {
+				return err
+			}
+			lp := g.LastPoint()
+			if lp == nil {
+				fmt.Println("point: draw")
+			} else {
+				fmt.Printf("point: %s\n", lp.Name())
+			}
+		}
+		winner := g.Winner()
+		if winner == nil {
+			fmt.Println("won: draw")
+		} else {
+			fmt.Printf("won: %s\n", winner.Name())
+		}
 	}
-
-	fmt.Printf("%s: playing card ( %s )\n", p2.Name(), p2.Cards()[0].Unicode())
-	if err := g.Play(p2, p2.Cards()[0]); err != nil {
-		return err
-	}
-
-	lp := g.LastPoint()
-	if lp == nil {
-		fmt.Println("draw")
-	} else {
-		fmt.Printf("point: %s\n", lp.Name())
-	}
-
-	fmt.Printf("manilha: %s\n", g.Manilha().Unicode())
-	printCards(p2)
-	printCards(p1)
-	fmt.Printf("%s: playing card ( %s )\n", p2.Name(), p2.Cards()[0].Unicode())
-	if err := g.Play(p2, p2.Cards()[0]); err != nil {
-		return err
-	}
-
-	fmt.Printf("%s: playing card ( %s )\n", p1.Name(), p1.Cards()[0].Unicode())
-	if err := g.Play(p1, p1.Cards()[0]); err != nil {
-		return err
-	}
-
-	lp = g.LastPoint()
-	if lp == nil {
-		fmt.Println("draw")
-	} else {
-		fmt.Printf("point: %s\n", lp.Name())
-	}
-
 	return nil
 }
 
