@@ -257,8 +257,7 @@ func (g *Game) Play(player *Player, card Card) error {
 	}
 
 	// check if the hand is over
-	// the max of rounds is 3, if the current round is 4, the hand is over
-	if g.hand().round == 4 {
+	if g.hand().round == 3 {
 		// cehck who won the hand
 		playerOnePoints := 0
 		playerTwoPoints := 0
@@ -277,6 +276,23 @@ func (g *Game) Play(player *Player, card Card) error {
 			g.hand().wonPosition = g.hand().points[0]
 		}
 		g.hands = append(g.hands, newHand())
+		if err := g.startHand(); err != nil {
+			return err
+		}
+	}
+
+	playerOneHands := 0
+	playerTwoHands := 0
+	for _, hand := range g.hands {
+		if hand.wonPosition == 0 {
+			playerOneHands += 1
+		} else if hand.wonPosition == 1 {
+			playerTwoHands += 1
+		}
+	}
+
+	if playerOneHands == 12 || playerTwoHands == 12 {
+		g.running = false
 	}
 
 	return nil
@@ -331,7 +347,14 @@ func (p *Player) ID() string {
 
 func (g *Game) LastPoint() *Player {
 	if g.hand().round == 0 {
-		return nil
+		if len(g.hands) == 1 {
+			return nil
+		}
+		previousHand := g.hands[len(g.hands)-2]
+		if previousHand.points[previousHand.round-1] == -1 {
+			return nil
+		}
+		return g.players[previousHand.points[previousHand.round-1]]
 	}
 	if g.hand().points[g.hand().round-1] == -1 {
 		return nil
@@ -344,6 +367,10 @@ func (g *Game) Winner() *Player {
 		return nil
 	}
 	return g.players[g.hand().wonPosition]
+}
+
+func (g *Game) Running() bool {
+	return g.running
 }
 
 func (g *Game) Manilha() Card {

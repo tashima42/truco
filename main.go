@@ -45,20 +45,24 @@ func runGame() error {
 		return errors.New("failed to start game: " + err.Error())
 	}
 
-	for i := -0; i < 2; i++ {
+	for i := -0; i < 20; i++ {
+		fmt.Printf("=================== HAND %d ===================\n", i)
 		fmt.Printf("manilha: %s\n", g.Manilha().Unicode())
-		for j := 0; j < 3; j++ {
+		for j := i; j <= 6; j++ {
 			cp := g.CurrentPlayer()
 			printCards(cp)
 			fmt.Printf("%s: playing card ( %s )\n", cp.Name(), cp.Cards()[0].Unicode())
 			if err := g.Play(cp, cp.Cards()[0]); err != nil {
 				return err
 			}
-			lp := g.LastPoint()
-			if lp == nil {
-				fmt.Println("point: draw")
-			} else {
-				fmt.Printf("point: %s\n", lp.Name())
+			if j%2 == 0 {
+				lp := g.LastPoint()
+				if lp == nil {
+					fmt.Println("point: draw")
+				} else {
+					fmt.Printf("point: %s\n", lp.Name())
+				}
+				fmt.Printf("---------------------- ROUND %d ----------------------\n", j/2)
 			}
 		}
 		winner := g.Winner()
@@ -66,6 +70,10 @@ func runGame() error {
 			fmt.Println("won: draw")
 		} else {
 			fmt.Printf("won: %s\n", winner.Name())
+		}
+		if !g.Running() {
+			fmt.Println("game finished")
+			break
 		}
 	}
 	return nil
